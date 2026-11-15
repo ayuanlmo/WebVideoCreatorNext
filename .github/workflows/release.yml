@@ -45,18 +45,23 @@ jobs:
           fi
           echo "Publishing ${TAG} to dist-tag ${DIST_TAG}"
 
+      # 版本由 package.json 的 packageManager 字段统一指定
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22.14.0"
 
-      - name: Install system ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      # 系统 ffmpeg 供测试造素材；浏览器共享库与 ci.yml 相同（noble 起 t64 包名）
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg \
+            libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libgbm1 libpango-1.0-0 libcairo2 libasound2t64 libatspi2.0-0t64
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
