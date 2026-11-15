@@ -4,7 +4,7 @@ coverage
 output
 tmp
 .bin
-vendor
+/vendor
 *.tmp
 *.mp3
 *.mp4
