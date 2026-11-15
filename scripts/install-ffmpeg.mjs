@@ -68,25 +68,38 @@ if (isInstalled()) {
     process.exit(0);
 }
 
-await fs.ensureDir(vendorDir);
 const archive = path.join(vendorDir, asset);
-log(`下载 ${asset} ...`);
-download(`${RELEASE_BASE}/${asset}`, archive);
-log("解压 ...");
 const extractDir = path.join(vendorDir, ".extract");
-await fs.ensureDir(extractDir);
-const tar = spawnSync("tar", ["-xf", archive, "-C", extractDir], {encoding: "utf8"});
-if (tar.status !== 0)
-    throw new Error(`解压失败（需要系统 tar）：${tar.stderr || tar.error}`);
-const top = (await fs.readdir(extractDir))[0];
-const binDir = path.join(extractDir, top, "bin");
-await fs.copy(path.join(binDir, "ffmpeg" + exeSuffix), ffmpegBin);
-await fs.copy(path.join(binDir, "ffprobe" + exeSuffix), ffprobeBin);
-await fs.chmod(ffmpegBin, 0o755);
-await fs.chmod(ffprobeBin, 0o755);
-await fs.remove(extractDir);
-await fs.remove(archive);
-if (!verifyMpegts())
-    throw new Error("静态 FFmpeg mpegts 验证失败，构建可能损坏");
-const ver = spawnSync(ffmpegBin, ["-version"], {encoding: "utf8"}).stdout.split("\n")[0];
-log(`安装完成：${ver}`);
+// 下载/解压/验证失败（网络、磁盘空间不足、损坏构建）只警告并清理残留，
+// 不中断 npm install：运行时 resolveFfmpegPath 会自动回退 ffmpeg-static
+try {
+    await fs.ensureDir(vendorDir);
+    log(`下载 ${asset} ...`);
+    download(`${RELEASE_BASE}/${asset}`, archive);
+    log("解压 ...");
+    await fs.ensureDir(extractDir);
+    const tar = spawnSync("tar", ["-xf", archive, "-C", extractDir], {encoding: "utf8"});
+    if (tar.status !== 0)
+        throw new Error(`解压失败（需要系统 tar）：${tar.stderr || tar.error}`);
+    const top = (await fs.readdir(extractDir))[0];
+    const binDir = path.join(extractDir, top, "bin");
+    await fs.copy(path.join(binDir, "ffmpeg" + exeSuffix), ffmpegBin);
+    await fs.copy(path.join(binDir, "ffprobe" + exeSuffix), ffprobeBin);
+    await fs.chmod(ffmpegBin, 0o755);
+    await fs.chmod(ffprobeBin, 0o755);
+    if (!verifyMpegts())
+        throw new Error("静态 FFmpeg mpegts 验证失败，构建可能损坏");
+    await fs.remove(extractDir);
+    await fs.remove(archive);
+    const ver = spawnSync(ffmpegBin, ["-version"], {encoding: "utf8"}).stdout.split("\n")[0];
+    log(`安装完成：${ver}`);
+}
+catch (err) {
+    await fs.remove(extractDir).catch(() => {});
+    await fs.remove(archive).catch(() => {});
+    await fs.remove(ffmpegBin).catch(() => {});
+    await fs.remove(ffprobeBin).catch(() => {});
+    log(`安装失败：${err.message}`);
+    log("已清理残留，回退 ffmpeg-static；如需 vendor 静态构建可稍后重新安装本包");
+    process.exit(0);
+}
