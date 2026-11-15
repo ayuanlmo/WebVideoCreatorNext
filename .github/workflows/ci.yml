@@ -29,14 +29,14 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
 
-      # chrome-headless-shell 运行所需的共享库（ubuntu 24.04 经 t64 Provides 解析）
+      # chrome-headless-shell 运行所需的共享库（noble 起 libasound2 等改名为 t64 实包，旧名是虚拟包无法安装）
       - name: Install browser system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-            libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0
+            libgbm1 libpango-1.0-0 libcairo2 libasound2t64 libatspi2.0-0t64
 
       # postinstall 会下载 BtbN 静态 FFmpeg（需 curl/tar，runner 已内置）
       - name: Install dependencies
