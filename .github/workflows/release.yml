@@ -1,0 +1,125 @@
+name: Release
+
+# Release 发布时触发：校验 tag 与 package.json 版本一致后构建、测试、打包并 publish 到 npm（public 无 scope 包）。
+# GitHub 的 release 事件不支持在 YAML 里按 tag/名称过滤，因此 Release 名称的匹配由下面的显式校验步骤完成。
+
+on:
+  release:
+    types: [ published ]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate release tag
+        env:
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="${GITHUB_REF_NAME}"
+          # 兼容 v0.1.0 与 0.1.0 两种 tag 风格（仓库历史 tag 无 v 前缀）
+          if [ "$TAG" != "v${VERSION}" ] && [ "$TAG" != "${VERSION}" ]; then
+            echo "::error::Release tag '${TAG}' does not match package.json version ${VERSION}"
+            echo "Expected tag: v${VERSION} or ${VERSION}"
+            exit 1
+          fi
+          if [ "$PRERELEASE" = "true" ]; then
+            case "$TAG" in
+              *-beta.*)
+                echo "DIST_TAG=next" >> "$GITHUB_ENV"
+                ;;
+              *)
+                echo "::error::Prerelease tag '${TAG}' must carry a -beta.x suffix (published to dist-tag 'next')"
+                exit 1
+                ;;
+            esac
+          else
+            echo "DIST_TAG=latest" >> "$GITHUB_ENV"
+          fi
+          echo "Publishing ${TAG} to dist-tag ${DIST_TAG}"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.14.0"
+
+      - name: Install system ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and test
+        run: |
+          pnpm build
+          pnpm typecheck
+          pnpm test
+          pnpm test:integration
+
+      - name: Verify package contents
+        run: |
+          set -o pipefail
+          TARBALL="$(npm pack --silent | tail -n 1)"
+          echo "Tarball: $TARBALL"
+          tar -tzf "$TARBALL" > /tmp/package-files.txt
+          for entry in \
+            package/dist/index.js \
+            package/dist/index.d.ts \
+            package/dist/browser/injected.js \
+            package/dist/assets/common.css \
+            package/dist/assets/vendor/lottie.js \
+            package/dist/assets/vendor/mp4box.js \
+            package/dist/assets/vendor/fontfaceobserver.js \
+            package/LICENSE \
+            package/NOTICE \
+            package/CHANGELOG.md; do
+            if ! grep -qx "$entry" /tmp/package-files.txt; then
+              echo "::error::Published tarball is missing $entry"
+              exit 1
+            fi
+          done
+          echo "Tarball contains all required entries."
+
+      - name: Check publish toolchain
+        env:
+          NPM_TOKEN: *** secrets.NPM_TOKEN }}
+        run: |
+          NODE_OK="$(node -e 'const [maj,min]=process.versions.node.split(".").map(Number);console.log(maj>22||(maj===22&&min>=14)?1:0)')"
+          if [ "$NODE_OK" != "1" ]; then
+            echo "::error::npm OIDC Trusted Publishing requires Node >= 22.14.0, got $(node -v)"
+            exit 1
+          fi
+          if [ -z "${NPM_TOKEN:-}" ]; then
+            NPM_VER="$(npm -v)"
+            OK="$(node -e "const a='$NPM_VER'.split('.').map(Number),b=[11,5,1];console.log(a[0]>b[0]||(a[0]===b[0]&&(a[1]>b[1]||(a[1]===b[1]&&a[2]>=b[2])))?1:0)")"
+            if [ "$OK" != "1" ]; then
+              echo "npm $NPM_VER is older than 11.5.1, upgrading npm for Trusted Publishing (OIDC) support"
+              npm install -g npm@latest
+            fi
+          fi
+
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: *** secrets.NPM_TOKEN }}
+        run: |
+          set -o pipefail
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            # 路径一：Automation token + provenance
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" >> "$HOME/.npmrc"
+            pnpm publish --access public --provenance --tag "$DIST_TAG" --no-git-checks
+          else
+            # 路径二：npm CLI Trusted Publishing（OIDC），仓库需在 npm 网站登记为该包的 trusted publisher
+            npm publish --access public --tag "$DIST_TAG" --provenance
+          fi
