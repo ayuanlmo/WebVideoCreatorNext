@@ -2,6 +2,12 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1] - 2026-11-15
+
+### 修复
+
+- **postinstall 安装失败硬中断**：FFmpeg 下载/解压/验证失败（网络问题、磁盘空间不足、损坏构建）时不再中断 `npm install`，自动清理残留（含损坏的半成品二进制）并回退 ffmpeg-static；运行时 `resolveFfmpegPath` 仍优先使用 vendor 静态构建。
+
 ## [0.1.0] - 2026-11-15
 
 首个衍生发布版本。基于 Vinlic/WebVideoCreator 0.0.34（上游已停止维护）进行 TypeScript 重写与现代化，保持核心 API 兼容。详见 [NOTICE](./NOTICE) 中的归属说明。

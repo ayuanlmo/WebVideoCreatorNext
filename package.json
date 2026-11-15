@@ -1,6 +1,6 @@
 {
   "name": "web-video-creator-next",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A framework for creating videos based on Node.js + Puppeteer + FFmpeg. TypeScript rewrite of Vinlic/WebVideoCreator.",
   "type": "module",
   "main": "dist/index.js",
