@@ -3,7 +3,7 @@
 从模块引入视频编码器常量即可使用。
 
 ```javascript
-import { VIDEO_ENCODER } from "web-video-creator";
+import { VIDEO_ENCODER } from "web-video-creator-next";
 
 console.log(VIDEO_ENCODER.CPU.H264);  // 输出 libx264
 console.log(VIDEO_ENCODER.NVIDIA.H264);  // 输出 h264_nvenc

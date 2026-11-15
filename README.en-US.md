@@ -1,25 +1,25 @@
 [简体中文](./README.md) | [English](./README.en-US.md)
 
 <p align="center" style="background:#fff">
-  <img width="650px" src="./assets/web-video-creator.png" />
+  <img width="650px" src="./assets/web-video-creator-next.jpg" />
 </p>
 
-[![NPM](https://nodei.co/npm/web-video-creator.png)](https://npmjs.org/package/web-video-creator)
+[![NPM](https://nodei.co/npm/web-video-creator-next.png)](https://npmjs.org/package/web-video-creator-next)
 
-![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
-![npm](https://img.shields.io/npm/dt/web-video-creator)
-![GitHub Repo stars](https://img.shields.io/github/stars/Vinlic/WebVideoCreator)
+![GitHub](https://img.shields.io/github/license/ayuanlmo/WebVideoCreatorNext)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/ayuanlmo/WebVideoCreatorNext)
+![npm](https://img.shields.io/npm/dt/web-video-creator-next)
+![GitHub Repo stars](https://img.shields.io/github/stars/ayuanlmo/WebVideoCreatorNext)
 
 # Introduction
 
-🌈 WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start) 🍻.
+🌈 WebVideoCreatorNext (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start) 🍻.
 
 WVC creates a virtual time environment🕒 for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
 
 All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame), This is an innovative experimental function 🧪.
 
-Q&A and discussion group on QQ🐧: 752693580
+> **About this project**: WebVideoCreatorNext is a maintained derivative of [Vinlic/WebVideoCreator](https://github.com/Vinlic/WebVideoCreator) (upstream is no longer maintained), rewritten in TypeScript (ESM) by ayuanlmo under the Apache-2.0 license, with modernized dependencies and stability fixes. The core API remains compatible: the main class is exported as `WebVideoCreator` (default export) with a `WebVideoCreatorNext` alias, and the docs and examples uniformly use `WebVideoCreatorNext`; the NPM package is `web-video-creator-next`, and Node.js >= 22.2.0 is required. See the [CHANGELOG](./CHANGELOG.md) for full changes and [NOTICE](./NOTICE) for attribution.
 
 <br>
 
@@ -88,11 +88,11 @@ Please note that if you manually use [RAF](https://developer.mozilla.org/en-US/d
 ## Installation
 
 ```shell
-# Install WebVideoCreator from NPM
-npm i web-video-creator
+# Install WebVideoCreatorNext from NPM
+npm i web-video-creator-next
 ```
 
-If you encounter issues with the download of `ffmpeg-static`, please set the environment variable: `FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`.
+During installation, the postinstall script automatically downloads a verified working static FFmpeg (BtbN build) into `vendor/ffmpeg` (requires system `curl` and `tar`), replacing the defective build bundled with `ffmpeg-static`; unsupported platforms (e.g., macOS) fall back to `ffmpeg-static`. You can also use `pnpm add web-video-creator-next` or `yarn add web-video-creator-next`.
 
 ## Create a Local Server
 
@@ -128,12 +128,10 @@ Create a test page in the root directory of the web server. The following HTML c
 
 ## Rendering Single Video
 
-<img style="width:550px" src="./assets/single-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // Configure WVC
 wvc.config({
@@ -147,7 +145,7 @@ const video = wvc.createSingleVideo({
     // URL of the page to be rendered
     url: "http://localhost:8080/test.html",
     // or can directly set the page content:
-    // content: "<h1>Hello WebVideoCreator</h1>",
+    // content: "<h1>Hello WebVideoCreatorNext</h1>",
     // Video width
     width: 1280,
     // Video height
@@ -163,8 +161,10 @@ const video = wvc.createSingleVideo({
 });
 
 // Listen for the completion event
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // Release resources after all tasks finish, see the "Releasing Resources" section
+    await wvc.destroy();
 });
 
 // Start rendering
@@ -173,12 +173,10 @@ video.start();
 
 ## Rendering Multi Video
 
-<img style="width:550px" src="./assets/multi-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // Configure WVC
 wvc.config({
@@ -200,7 +198,7 @@ const video = wvc.createMultiVideo({
         {
             url: "http://localhost:8080/scene-1.html",
             // or can directly set the page content:
-            // content: "<h1>Hello WebVideoCreator</h1>",
+            // content: "<h1>Hello WebVideoCreatorNext</h1>",
             duration: 10000,
             // Insert a circular crop transition between the first and second scenes
             transition: TRANSITION.CIRCLE_CROP
@@ -217,8 +215,10 @@ const video = wvc.createMultiVideo({
 });
 
 // Listen for the completion event
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // Release resources after all tasks finish, see the "Releasing Resources" section
+    await wvc.destroy();
 });
 
 // Start rendering
@@ -227,12 +227,10 @@ video.start();
 
 ## Rendering Chunk Video and Combining into Multi Video
 
-<img style="width:550px" src="./assets/chunk-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // Configure WVC
 wvc.config({
@@ -245,7 +243,7 @@ wvc.config({
 const chunk1 = wvc.createChunkVideo({
     url: "http://localhost:8080/scene-1.html",
     // or can directly set the page content:
-    // content: "<h1>Hello WebVideoCreator</h1>",
+    // content: "<h1>Hello WebVideoCreatorNext</h1>",
     width: 1280,
     height: 720,
     fps: 30,
@@ -286,8 +284,10 @@ const video = wvc.createMultiVideo({
 });
 
 // Listen for the completion event
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // Release resources after all tasks finish, see the "Releasing Resources" section
+    await wvc.destroy();
 });
 
 // Start rendering
@@ -299,9 +299,9 @@ video.start();
 You can globally configure WVC to adjust some common parameters.
 
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 wvc.config({
     // Enable this to output some debug logs from WVC
@@ -342,6 +342,8 @@ wvc.config({
     frameQuality: 80,
     // Frame image format (jpeg/png); it's recommended to use jpeg as png capture is more time-consuming
     frameFormat: "jpeg",
+    // Chunk size (bytes) for transferring preprocessed data back to the browser; chunked transfer kicks in automatically above this size
+    preprocessChunkSize: 33554432,
     // Timeout for capturing images with BeginFrame
     beginFrameTimeout: 5000,
     // Video encoder for MP4 format; by default, it uses the libx264 software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware, Encoder selection can refer to docs/video-encoder.md.
@@ -419,9 +421,11 @@ video.addAudios([...]);
 
 This operation also applies to MultiVideo and ChunkVideo.
 
+> **Upstream issue fixed**: [issues/29](https://github.com/Vinlic/WebVideoCreator/issues/29) "Blob & Base64 \<audio\> not recorded" has been fixed — `<audio>` elements with `blob:` or `data:` (base64) sources are now recorded and mixed into the audio track, and audio sources specified by `<source>` child elements are supported as well.
+
 ## Inserting Video
 
-Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`. If your src does not contain the `. mp4` suffix name, it may not be recognized. Please add the `capture` attribute to identify the element that needs to be captured.
+Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`. If your src does not contain the `.mp4` suffix, it may not be recognized. Please add the `capture` attribute to mark the element as one that needs to be captured.
 
 ```html
 <video src="background.mp4" loop muted></video
@@ -459,9 +463,11 @@ If you are using some front-end frameworks to implement animation content, WVC m
 <canvas src="test.mp4" video-capture></canvas>
 ```
 
+> **Upstream issue fixed**: [issues/21](https://github.com/Vinlic/WebVideoCreator/issues/21) "Embedded video too long causes errors" has been fixed — when the preprocessed video data exceeds the chunk size (32MB by default, configurable via `preprocessChunkSize`), it is now transferred to the browser in chunks automatically, no longer limited by the browser's ~100MB read buffer, so long videos can be embedded and rendered normally.
+
 ### Transparent Channel Videos
 
-Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. Please refer to **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** Last Demo
+Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. Please refer to the last demo of **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)**.
 
 In WVC, transparent videos should be in the `webm` format. Internally, they will be re-encoded into two mp4 container videos: one for the color base video and one for the mask video. These videos will be used for blending and drawing using the `globalCompositeOperation` in the browser canvas.
 
@@ -549,7 +555,7 @@ WVC supports the use of [Xfade](https://trac.ffmpeg.org/wiki/Xfade) filters supp
 Each chunk video parameter can be configured with a transition effect and its duration.
 
 ```javascript
-import WebVideoCreator, { TRANSITION } from "web-video-creator";
+import WebVideoCreatorNext, { TRANSITION } from "web-video-creator-next";
 
 ...
 
@@ -799,6 +805,29 @@ const video = wvc.createSingleVideo({
 });
 ```
 
+## 4K and High Quality Rendering
+
+> **Upstream issue verified**: [issues/27](https://github.com/Vinlic/WebVideoCreator/issues/27) "How to record 4k or highest quality possible" has been verified by pixel-level regression tests: 4K output dimensions and layout proportions are correct, and `deviceScaleFactor` does not stretch the image.
+
+`width` / `height` are exactly the pixel dimensions of the output video. To record 4K, just set them directly:
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 4K output
+    width: 4096,
+    height: 2160
+});
+```
+
+Note that in deterministic rendering mode (the default) the page is captured at viewport pixels (DIP); `pageViewport.deviceScaleFactor` does not increase the capture resolution (and does not stretch the image). If your page is designed at a smaller size (e.g. 1080p), make the page adapt to the target resolution (responsive layout, or scale the root element up with CSS `zoom` / `transform: scale()`), then output at the target resolution to get a correctly proportioned and crisp 4K picture.
+
+For the highest quality, it is recommended to:
+
+- Capture frames losslessly with `frameFormat: "png"`, or use `frameFormat: "jpeg"` with `frameQuality: 100`;
+- Use `videoQuality: 100`, or set a higher `videoBitrate` as needed;
+- Choose a suitable hardware encoder to sustain high-resolution, high-bitrate encoding, see [Video Encoder Documentation](./docs/video-encoder.md).
+
 <br>
 
 # Video Encoder Selection
@@ -836,6 +865,18 @@ You can actively throw errors in the page to interrupt rendering.
     captureCtx.throwError(-1, "Abort");
 </script>
 ```
+
+## Terminating Rendering
+
+To finish a rendering task early, call the `abort()` method of the video instance. Capturing stops ahead of time and the synthesis output is completed with the frames captured so far.
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+// Terminate rendering after 5 seconds
+setTimeout(() => video.abort(), 5000);
+```
+
+You can also call [captureCtx.abort()](./docs/capture-ctx.md#capturecontextabort) in the page to terminate capturing, which has the same effect as the `abort()` of the video instance. The synthesizers of the low-level API ([Synthesizer](./docs/api-reference-low-level.md#synthesizer) / [VideoChunk](./docs/api-reference-low-level.md#videochunk) / [ChunkSynthesizer](./docs/api-reference-low-level.md#chunksynthesizer)) also support `abort()`.
 
 ## Listening for Page Crashes
 
@@ -909,6 +950,26 @@ wvc.cleanLocalFontCache();
 
 <br>
 
+# Releasing Resources
+
+Before all rendering tasks finish and the process exits, call `destroy()` to close the browser resource pool and release related resources. Otherwise browser instances stay alive and the Node.js process may not exit naturally.
+
+```javascript
+// Destroy the resource pool after all tasks finish
+await wvc.destroy();
+```
+
+Behavior of `destroy()`:
+
+- Closes all browser and page instances, after which the Node.js process can exit naturally (see the `process-exit` integration test).
+- Resets the configuration state; `config()` can be executed again afterwards to start new tasks.
+- Calling it before `config()` is a safe no-op and does not throw.
+- It is idempotent and safe to call multiple times.
+
+When using [ResourcePool](./docs/api-reference-low-level.md#resourcepool) directly with the low-level API, call `pool.close()` for the same effect.
+
+<br>
+
 # API Reference
 
 ## High-Level API
@@ -925,7 +986,7 @@ In most cases, it is recommended to use the high-level API because it is simple 
 
 # Distributed Rendering
 
-If you have multiple devices available for rendering, you can deploy WVC on these devices. WVC provides `MultiVideo` and `ChunkVideo`, allowing you to divide the animation pages into many segments (e.g., 0-10 seconds, 10-20 seconds, etc.). Distribute their parameters to different WVC instances on different devices, create ChunkVideo instances on these devices, and execute parallel rendering to generate multiple video segments (`ts`). These segments are then sent back to the core node, where they are combined, and transitions, audio tracks, and output are handled. **The distribution and return process is not yet implemented in WVC, but it is not difficult, and you can wrap it according to your own scenario. Contributions to WVC are welcome through [PR](https://github.com/Vinlic/WebVideoCreator/pulls)!**
+If you have multiple devices available for rendering, you can deploy WVC on these devices. WVC provides `MultiVideo` and `ChunkVideo`, allowing you to divide the animation pages into many segments (e.g., 0-10 seconds, 10-20 seconds, etc.). Distribute their parameters to different WVC instances on different devices, create ChunkVideo instances on these devices, and execute parallel rendering to generate multiple video segments (`ts`). These segments are then sent back to the core node, where they are combined, and transitions, audio tracks, and output are handled. **The distribution and return process is not yet implemented in WVC, but it is not difficult, and you can wrap it according to your own scenario. Contributions to WVC are welcome through [PR](https://github.com/ayuanlmo/WebVideoCreatorNext/pulls)!**
 
 <br>
 
@@ -977,10 +1038,10 @@ Parallel Rendering Count: 16
 
 # Limitations
 
-- Constrained by browser [secure context restrictions](https://w3c.github.io/webappsec-secure-contexts/), WebVideoCreator can only access `localhost` / `127.0.0.1` or domains using HTTPS with valid certificates. For security reasons, it's recommended to use a local static server (e.g., `live-server` is a good choice), You can also use the content option to directly set the page content to avoid URL restrictions.
+- Constrained by browser [secure context restrictions](https://w3c.github.io/webappsec-secure-contexts/), WebVideoCreatorNext can only access `localhost` / `127.0.0.1` or domains using HTTPS with valid certificates. For security reasons, it's recommended to use a local static server (e.g., `live-server` is a good choice), You can also use the content option to directly set the page content to avoid URL restrictions.
 
 - The headless experimental API on Mac systems may cause crashes and needs to be switched to compatibility rendering mode to run. However, compatibility rendering mode has various issues, so it is not recommended for Mac systems. See [Compatibility Rendering Mode](#compatible-rendering-mode).
 
-- WebVideoCreator is a pure ESM package and cannot be imported using CommonJS-style `require`. If you still want to use `require` to import it, refer to this [gist](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) for guidance.
+- WebVideoCreatorNext is a pure ESM package and cannot be imported using CommonJS-style `require`. If you still want to use `require` to import it, refer to this [gist](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) for guidance.
 
 - The page jump request during the video rendering process will be intercepted because jumping to the page will result in the loss of capture context.

@@ -1,7 +1,7 @@
 # 低级别 API
 
 ```javascript
-import { core } from "web-video-creator"
+import { core } from "web-video-creator-next"
 // 低级API在core暴露
 const { ... } = core;
 ```
@@ -12,7 +12,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new ResourcePool(options: Object)
+### new ResourcePool (options: Object)
 
 #### options 参数
 
@@ -50,21 +50,38 @@ const { ... } = core;
 
 ## 成员
 
-### ResourcePool.warmup(): Promise
+### ResourcePool.warmup (): Promise
 
 预热资源池，当渲染任务产生时可以快速启动渲染。
 
-### ResourcePool.acquirePage(): Promise<[Page](#page)>
+### ResourcePool.acquirePage (): Promise<[Page](#page)>
 
-从资源池获取一个页面封装实例，请记得 page 对象使用完毕后调用 [page.release()](#pagerelease-promise) 释放它。
+从资源池获取一个页面封装实例，请记得 page 对象使用完毕后调用 [page.release ()](#pagerelease-promise) 释放它。
 
-### ResourcePool.acquireBrowser(): Promise<[Browser](#browser)>
+### ResourcePool.acquireBrowser (): Promise<[Browser](#browser)>
 
-从资源池获取一个浏览器封装实例，请记得 browser 对象使用完毕后调用 [browser.release()](#browserrelease-promise) 释放它。
+从资源池获取一个浏览器封装实例，请记得 browser 对象使用完毕后调用 [browser.release ()](#browserrelease-promise) 释放它。
 
-### ResourcePool.isBusy(): boolean
+### ResourcePool.isBusy (): boolean
 
 判断浏览器资源池是否饱和
+
+### ResourcePool.close (): Promise
+
+关闭资源池，将关闭全部浏览器与页面实例并停止内部检查器，之后 Node.js
+进程可自然退出。对应高级别API的 [destroy](./api-reference-high-level.md#webvideocreatornextdestroy-promise)。
+
+### ResourcePool.releaseBrowser (browser: [Browser](#browser)): Promise
+
+释放浏览器封装实例，将被回收到资源池进行下一次分配。
+
+### ResourcePool.destoryBrowser (browser: [Browser](#browser)): Promise
+
+销毁浏览器封装实例，将通知资源池销毁浏览器资源（方法名拼写与上游保持一致）。
+
+### ResourcePool.videoPreprocessor: VideoPreprocessor
+
+视频预处理器实例。
 
 <br>
 
@@ -74,7 +91,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Browser(options: Object)
+### new Browser (options: Object)
 
 #### options 参数
 
@@ -132,43 +149,43 @@ const { ... } = core;
 
 ## 成员
 
-### Browser.init(): Promise
+### Browser.init (): Promise
 
 初始化浏览器
 
-### Browser.acquirePage(): Promise<[Page](#page)>
+### Browser.acquirePage (): Promise<[Page](#page)>
 
-从浏览器封装获取一个页面封装实例，请记得 page 对象使用完毕后调用 [page.release()](#pagerelease-promise) 释放它。
+从浏览器封装获取一个页面封装实例，请记得 page 对象使用完毕后调用 [page.release ()](#pagerelease-promise) 释放它。
 
-### Browser.release(): Promise
+### Browser.release (): Promise
 
 释放浏览器封装自身，将被回收到资源池进行下一次分配。
 
-### Browser.close(): Promise
+### Browser.close (): Promise
 
 关闭浏览器，将通知资源池销毁浏览器资源
 
-### Browser.getPageCount(): Promise<number>
+### Browser.getPageCount (): Promise<number>
 
 获取浏览器已开启的页面数量
 
-### Browser.isUninitialized(): boolean
+### Browser.isUninitialized (): boolean
 
 判断浏览器是否未初始化
 
-### Browser.isReady(): boolean
+### Browser.isReady (): boolean
 
 判断浏览器是否已就绪
 
-### Browser.isUnavailabled(): boolean
+### Browser.isUnavailabled (): boolean
 
 判断浏览器是否不可用
 
-### Browser.isClosed(): boolean
+### Browser.isClosed (): boolean
 
 判断浏览器是否已关闭
 
-### Browser.isBusy(): boolean
+### Browser.isBusy (): boolean
 
 判断浏览器页面池是否饱和
 
@@ -180,7 +197,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Page(options: Object)
+### new Page (options: Object)
 
 #### options 参数
 
@@ -228,11 +245,11 @@ const { ... } = core;
 
 ## 成员
 
-### Page.init(): Promise
+### Page.init (): Promise
 
 初始化页面
 
-### Page.setViewport(options: Object): Promise
+### Page.setViewport (options: Object): Promise
 
 设置视窗参数
 
@@ -240,19 +257,20 @@ const { ... } = core;
 
 与Puppeteer的[Viewport](https://pptr.dev/api/puppeteer.viewport#properties)保持一致。
 
-### Page.goto(url: string, waitForOptions: Object): Promise
+### Page.goto (url: string, waitForOptions: Object): Promise
 
 导航到待渲染页面。
 
 #### url 参数
 
-本地 URL 或远端 HTTPS URL，受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
+本地 URL 或远端 HTTPS URL，受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问
+localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
 
 #### waitForOptions 参数
 
 与Puppeteer的[WaitForOptions](https://pptr.dev/api/puppeteer.waitforoptions)保持一致。
 
-### Page.setContent(content: string, waitForOptions: Object): Promise
+### Page.setContent (content: string, waitForOptions: Object): Promise
 
 设置待渲染页面内容。
 
@@ -264,7 +282,7 @@ const { ... } = core;
 
 与Puppeteer的[WaitForOptions](https://pptr.dev/api/puppeteer.waitforoptions)保持一致。
 
-### Page.registerFont(options: Object)
+### Page.registerFont (options: Object)
 
 注册字体
 
@@ -272,7 +290,7 @@ const { ... } = core;
 
 参考 [Font](#font) 字体参数。
 
-### Page.registerFonts([options: Object, ...])
+### Page.registerFonts ([options: Object, ...])
 
 注册多个字体
 
@@ -280,7 +298,7 @@ const { ... } = core;
 
 参考 [Font](#font) 字体参数。
 
-### Page.registerTimeActions(actions: {[key: Number]: Function})
+### Page.registerTimeActions (actions: {[key: Number]: Function})
 
 注册动作序列
 
@@ -288,7 +306,7 @@ const { ... } = core;
 
 动作序列对象
 
-### Page.waitForFontsLoaded(timeout: number): Promise
+### Page.waitForFontsLoaded (timeout: number): Promise
 
 等待字体加载完成。
 
@@ -296,7 +314,7 @@ const { ... } = core;
 
 超时时间（毫秒），默认 30000 毫秒
 
-### Page.startScreencast(options: Object): Promise
+### Page.startScreencast (options: Object): Promise
 
 开始帧图流捕获
 
@@ -339,49 +357,71 @@ const { ... } = core;
     </tbody>
 </table>
 
-### Page.pauseScreencast(): Promise
+### Page.pauseScreencast (): Promise
 
 暂停帧图流捕获
 
-### Page.resumeScreencast(): Promise
+### Page.resumeScreencast (): Promise
 
 恢复帧图流捕获
 
-### Page.stopScreencast(): Promise
+### Page.stopScreencast (): Promise
 
 停止帧图流捕获
 
-### Page.getCaptureContextConfig(): Promise
+### Page.getCaptureContextConfig (): Promise
 
 获取页面中全局的 `captureCtx.config` 配置内容。
 
-### Page.reset(): Promise
+### Page.reset (): Promise
 
 重置页面封装，重置后可开始新的捕获。
 
-### Page.release(): Promise
+### Page.release (): Promise
 
 释放页面封装自身，将被回收到页面池进行下一次分配。
 
-### Page.close(): Promise
+### Page.close (): Promise
 
 关闭页面，将通知浏览器封装销毁页面资源
 
-### Page.isUninitialized(): boolean
+### Page.isUninitialized (): boolean
 
 判断页面是否未初始化
 
-### Page.isReady(): boolean
+### Page.isReady (): boolean
 
 判断页面是否已就绪
 
-### Page.isUnavailabled(): boolean
+### Page.isUnavailabled (): boolean
 
 判断页面是否不可用
 
-### Page.isClosed(): boolean
+### Page.isClosed (): boolean
 
 判断页面是否已关闭
+
+## 事件
+
+### error
+
+页面内部错误事件，回调参数：（err）
+
+### crashed
+
+页面崩溃事件，回调参数：（err）
+
+### consoleLog / consoleError
+
+页面控制台日志事件，回调参数：（message）
+
+### frame
+
+已渲染帧事件，回调参数：（buffer: Buffer），帧图数据可输入 [Synthesizer](#synthesizer) 合成视频。
+
+### screencastCompleted
+
+帧图流捕获完成事件。
 
 <br>
 
@@ -391,7 +431,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Synthesizer(options: Object)
+### new Synthesizer (options: Object)
 
 #### options 参数
 
@@ -490,6 +530,11 @@ const { ... } = core;
             <td>视频音量（0-100），默认100</td>
         </tr>
         <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
+        </tr>
+        <tr>
             <td>parallelWriteFrames</td>
             <td>number</td>
             <td>并行写入帧数，默认10</td>
@@ -502,15 +547,15 @@ const { ... } = core;
     </tbody>
 </table>
 
-### Synthesizer.start()
+### Synthesizer.start ()
 
 启动合成。
 
-### Synthesizer.abort()
+### Synthesizer.abort ()
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### Synthesizer.input(buffer: Buffer)
+### Synthesizer.input (buffer: Buffer)
 
 输入帧数据。
 
@@ -518,11 +563,11 @@ const { ... } = core;
 
 使用 Buffer 对象存储的帧图二进制数据，输入后将流式传输到 FFmpeg。
 
-### Synthesizer.endInput()
+### Synthesizer.endInput ()
 
 结束帧图流的输入，通知 FFmpeg 所有帧已经输入完成等待合成完成。
 
-### Synthesizer.addAudio(options: Object)
+### Synthesizer.addAudio (options: Object)
 
 添加音频。
 
@@ -530,7 +575,7 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### Synthesizer.addAudios([options: Object, ...])
+### Synthesizer.addAudios ([options: Object, ...])
 
 添加多个音频
 
@@ -538,25 +583,41 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### Synthesizer.removeOutputFile(): Promise
+### Synthesizer.removeOutputFile (): Promise
 
 移除输出文件。
 
-### Synthesizer.reset()
+### Synthesizer.reset ()
 
 重置合成器，重置后可以重新输入帧。
 
-### Synthesizer.isReady(): boolean
+### Synthesizer.isReady (): boolean
 
 合成器是否已就绪
 
-### Synthesizer.isSynthesizing(): boolean
+### Synthesizer.isSynthesizing (): boolean
 
 合成器是否正在合成中
 
-### Synthesizer.isCompleted(): boolean
+### Synthesizer.isCompleted (): boolean
 
 合成器是否已经合成完成
+
+## 事件
+
+### progress
+
+合成进度事件，回调参数： (progress, processedFrameCount, totalFrameCount)
+
+### completed
+
+已完成合成事件，回调参数： (result: { duration, takes, outputPath, rtf })
+
+### error
+
+错误事件，回调参数：（err）
+
+[VideoChunk](#videochunk) 与 [ChunkSynthesizer](#chunksynthesizer) 继承自 Synthesizer，同样支持以上事件。
 
 <br>
 
@@ -566,7 +627,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new VideoChunk(options: Object)
+### new VideoChunk (options: Object)
 
 #### options 参数
 
@@ -615,6 +676,11 @@ const { ... } = core;
             <td>分块被合并后是否自动删除分块文件，默认true</td>
         </tr>
         <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
+        </tr>
+        <tr>
             <td>videoEncoder</td>
             <td>string</td>
             <td>视频编码器，编码器选择请参考 <a href="./video-encoder.md">视频编码器列表</a></td>
@@ -647,15 +713,15 @@ const { ... } = core;
     </tbody>
 </table>
 
-### VideoChunk.start()
+### VideoChunk.start ()
 
 启动合成。
 
-### VideoChunk.abort()
+### VideoChunk.abort ()
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### VideoChunk.input(buffer: Buffer)
+### VideoChunk.input (buffer: Buffer)
 
 输入帧数据。
 
@@ -663,11 +729,11 @@ const { ... } = core;
 
 使用 Buffer 对象存储的帧图二进制数据，输入后将流式传输到 FFmpeg。
 
-### VideoChunk.endInput()
+### VideoChunk.endInput ()
 
 结束帧图流的输入，通知 FFmpeg 所有帧已经输入完成等待合成完成。
 
-### VideoChunk.addAudio(options: Object)
+### VideoChunk.addAudio (options: Object)
 
 添加音频。
 
@@ -675,11 +741,11 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### VideoChunk.addAudios([options: Object, ...])
+### VideoChunk.addAudios ([options: Object, ...])
 
 添加多个音频
 
-### VideoChunk.setTransition(options: Object)
+### VideoChunk.setTransition (options: Object)
 
 设置转场效果
 
@@ -687,19 +753,19 @@ const { ... } = core;
 
 参考 [Transition](#transition) 转场参数。
 
-### VideoChunk.reset()
+### VideoChunk.reset ()
 
 重置视频分块，重置后可以重新输入帧。
 
-### VideoChunk.isReady(): boolean
+### VideoChunk.isReady (): boolean
 
 视频分块是否已就绪
 
-### VideoChunk.isSynthesizing(): boolean
+### VideoChunk.isSynthesizing (): boolean
 
 视频分块是否正在合成中
 
-### VideoChunk.isCompleted(): boolean
+### VideoChunk.isCompleted (): boolean
 
 视频分块是否已经合成完成
 
@@ -711,7 +777,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new ChunkSynthesizer(options: Object)
+### new ChunkSynthesizer (options: Object)
 
 #### options 参数
 
@@ -810,6 +876,11 @@ const { ... } = core;
             <td>视频音量（0-100），默认100</td>
         </tr>
         <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
+        </tr>
+        <tr>
             <td>parallelWriteFrames</td>
             <td>number</td>
             <td>并行写入帧数，默认10</td>
@@ -822,15 +893,15 @@ const { ... } = core;
     </tbody>
 </table>
 
-### ChunkSynthesizer.start()
+### ChunkSynthesizer.start ()
 
 启动合成。
 
-### ChunkSynthesizer.abort()
+### ChunkSynthesizer.abort ()
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### ChunkSynthesizer.input(chunk: [VideoChunk](#videochunk), transition: [Transition](#transition))
+### ChunkSynthesizer.input (chunk: [VideoChunk](#videochunk), transition: [Transition](#transition))
 
 输入视频分块。
 
@@ -842,7 +913,7 @@ const { ... } = core;
 
 请参考 [Transition](#transition) 。
 
-### ChunkSynthesizer.addAudio(options: Object)
+### ChunkSynthesizer.addAudio (options: Object)
 
 添加音频。
 
@@ -850,23 +921,23 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### ChunkSynthesizer.addAudios([options: Object, ...])
+### ChunkSynthesizer.addAudios ([options: Object, ...])
 
 添加多个音频
 
-### ChunkSynthesizer.reset()
+### ChunkSynthesizer.reset ()
 
 重置合成器，重置后可以重新输入视频分块。
 
-### ChunkSynthesizer.isReady(): boolean
+### ChunkSynthesizer.isReady (): boolean
 
 合成器是否已就绪
 
-### ChunkSynthesizer.isSynthesizing(): boolean
+### ChunkSynthesizer.isSynthesizing (): boolean
 
 合成器是否正在合成中
 
-### ChunkSynthesizer.isCompleted(): boolean
+### ChunkSynthesizer.isCompleted (): boolean
 
 合成器是否已经合成完成
 
@@ -921,7 +992,7 @@ const { ... } = core;
         <tr>
             <td>seekEnd</td>
             <td>number</td>
-            <td>裁剪结束实际点（毫秒）</td>
+            <td>裁剪结束时间点（毫秒）</td>
         </tr>
         <tr>
             <td>fadeInDuration</td>
@@ -966,7 +1037,7 @@ const { ... } = core;
         </tr>
         <tr>
             <td>duration</td>
-            <td>string</td>
+            <td>number</td>
             <td>转场时长（毫秒）</td>
         </tr>
     </tbody>

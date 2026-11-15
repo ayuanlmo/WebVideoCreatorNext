@@ -8,6 +8,18 @@ WVC会将此上下文实例暴露到 `window.captureCtx` 以便您的页面访�
 
 开始捕获页面，视频实例的 `autostartRender` 选项为false时，必须调用此函数才能启动渲染。
 
+## CaptureContext.abort()
+
+终止捕获，捕获将提前终止并以已捕获的帧完成合成输出，效果与视频实例的 `abort()` 一致。仅在捕获已开始后有效。
+
+## CaptureContext.throwError(code: number, message: string)
+
+抛出错误并中断渲染，错误将通过视频实例的 `error` 事件回调给调用方。
+
+## CaptureContext.isCapturing(): boolean
+
+是否已经开始捕获（当前捕获时间点已超过 `config.startTime`）。
+
 ## CaptureContext.addAudio(options: Object)
 
 添加音频，也可以在页面中插入 `<audio>` 元素来添加音频。
@@ -56,7 +68,7 @@ WVC会将此上下文实例暴露到 `window.captureCtx` 以便您的页面访�
         <tr>
             <td>seekEnd</td>
             <td>number</td>
-            <td>裁剪结束实际点（毫秒）</td>
+            <td>裁剪结束时间点（毫秒）</td>
         </tr>
         <tr>
             <td>fadeInDuration</td>
@@ -112,6 +124,21 @@ WVC会将此上下文实例暴露到 `window.captureCtx` 以便您的页面访�
             <td>frameCount</td>
             <td>number</td>
             <td>目标总帧数</td>
+        </tr>
+        <tr>
+            <td>startTime</td>
+            <td>number</td>
+            <td>开始捕获时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>autostart</td>
+            <td>boolean</td>
+            <td>页面就绪后是否自动开始捕获</td>
+        </tr>
+        <tr>
+            <td>videoDecoderHardwareAcceleration</td>
+            <td>string</td>
+            <td>VideoDecoder硬件加速指示</td>
         </tr>
     </tbody>
 </table>

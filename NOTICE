@@ -1,0 +1,18 @@
+WebVideoCreatorNext
+Copyright 2026 ayuanlmo
+
+This product is a derivative work of WebVideoCreator
+(https://github.com/Vinlic/WebVideoCreator), originally developed by
+Vinlic <vinlic@vinlic.com> and licensed under the Apache License, Version 2.0.
+
+This product includes software developed by Vinlic.
+
+The original WebVideoCreator copyright and license notices are retained in
+the LICENSE file. Modifications and the TypeScript rewrite are copyright
+2026 ayuanlmo and are likewise licensed under the Apache License, Version 2.0.
+
+This product depends on FFmpeg (https://ffmpeg.org) at runtime. The optional
+install script (scripts/install-ffmpeg.mjs) downloads a static FFmpeg build
+from FFmpeg-Builds (https://github.com/FFmpeg-Builds/FFmpeg-Builds); FFmpeg is
+licensed separately under its own terms (LGPL/GPL depending on the build) and
+is not distributed within this package.

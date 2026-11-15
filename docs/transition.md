@@ -5,7 +5,7 @@
 从模块引入转场效果常量即可使用。
 
 ```javascript
-import { TRANSITION } from "web-video-creator";
+import { TRANSITION } from "web-video-creator-next";
 
 console.log(TRANSITION.FADE);  // 输出 fade
 console.log(TRANSITION.CIRCLE_OPEN);  // 输出 circleopen

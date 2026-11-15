@@ -1,8 +1,8 @@
 # 高级别API
 
-# WebVideoCreator
+# WebVideoCreatorNext
 
-### WebVideoCreator.config([options: Object])
+### WebVideoCreatorNext.config([options: Object])
 
 配置 WVC 的全局开关和属性，在任何操作之前都必须运行它。
 
@@ -20,7 +20,7 @@
         <tr>
             <td>debug</td>
             <td>boolean</td>
-            <td>WebVideoCreator调试日志，开启后将输出一些内部的调试日志</td>
+            <td>WebVideoCreatorNext调试日志，开启后将输出一些内部的调试日志</td>
         </tr>
         <tr>
             <td>browserVersion</td>
@@ -133,6 +133,11 @@
             <td>帧图格式（jpeg/png）建议使用jpeg，png捕获较为耗时</td>
         </tr>
         <tr>
+            <td>preprocessChunkSize</td>
+            <td>number</td>
+            <td>预处理数据回传浏览器的分片大小（字节），超过时自动分片传输以避免浏览器约100MB读缓冲上限，默认33554432（32MB）</td>
+        </tr>
+        <tr>
             <td>beginFrameTimeout</td>
             <td>number</td>
             <td>BeginFrame捕获图像超时时间（毫秒）</td>
@@ -157,7 +162,7 @@
 
 <br>
 
-### WebVideoCreator.createSingleVideo(options: Object): [SingleVideo](#singlevideo)
+### WebVideoCreatorNext.createSingleVideo(options: Object): [SingleVideo](#singlevideo)
 
 创建单幕视频实例
 
@@ -167,7 +172,7 @@
 
 <br>
 
-### WebVideoCreator.createMultiVideo(options: Object): [MultiVideo](#multivideo)
+### WebVideoCreatorNext.createMultiVideo(options: Object): [MultiVideo](#multivideo)
 
 创建多幕视频实例
 
@@ -177,13 +182,42 @@
 
 <br>
 
-### WebVideoCreator.createChunkVideo(options: Object): [ChunkVideo](#chunkvideo)
+### WebVideoCreatorNext.createChunkVideo(options: Object): [ChunkVideo](#chunkvideo)
 
 创建分块视频实例
 
 #### options 参数
 
 参考 [ChunkVideo](#chunkVideo) 构造函数的options参数。
+
+<br>
+
+### WebVideoCreatorNext.destroy(): Promise
+
+销毁浏览器资源池并复位配置状态。
+
+- 将关闭全部浏览器与页面实例，之后 Node.js 进程可自然退出。
+- 复位配置状态，销毁后可重新执行 [config](#webvideocreatornextconfigoptions-object) 开启新的任务。
+- 未执行过 `config()` 时调用是安全的空操作。
+- 可重复调用（幂等）。
+
+<br>
+
+### WebVideoCreatorNext.cleanBrowserCache(): Promise
+
+清理浏览器缓存。
+
+### WebVideoCreatorNext.cleanPreprocessCache(): Promise
+
+清理预处理缓存。
+
+### WebVideoCreatorNext.cleanSynthesizeCache(): Promise
+
+清理合成缓存。
+
+### WebVideoCreatorNext.cleanLocalFontCache(): Promise
+
+清理本地字体缓存。
 
 <br>
 
@@ -209,7 +243,22 @@
         <tr>
             <td>url</td>
             <td>string</td>
-            <td>待渲染的页面URL</td>
+            <td>待渲染的页面URL，与content二选一</td>
+        </tr>
+        <tr>
+            <td>content</td>
+            <td>string</td>
+            <td>待渲染的页面内容，与url二选一</td>
+        </tr>
+        <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
+        </tr>
+        <tr>
+            <td>waitTimeout</td>
+            <td>number</td>
+            <td>startAndWait超时时间（毫秒），0为不超时，默认0</td>
         </tr>
         <tr>
             <td>outputPath</td>
@@ -368,6 +417,10 @@
 
 错误事件，回调参数：（err）
 
+### pageCrashed
+
+页面崩溃事件，回调参数：（err）
+
 ## 成员
 
 ### SingleVideo.registerFont(options: Object)
@@ -410,6 +463,14 @@
 
 启动单幕渲染合成并等待完成
 
+### SingleVideo.abort(): boolean
+
+终止渲染合成，捕获将提前终止并以已捕获的帧完成合成输出，返回是否成功触发终止。
+
+### SingleVideo.onPageAcquire(fn: Function)
+
+注册页面获取函数，函数返回一个 [Page](./api-reference-low-level.md#page) 实例，使用高级别API时已自动注册，仅在[低级别API](./api-reference-low-level.md)直接使用本类时需要注册。
+
 <br>
 
 # MultiVideo
@@ -450,6 +511,11 @@
             <td>chunks</td>
             <td><a href="#chunkvideo">ChunkVideo</a>[]</td>
             <td>未渲染或已渲染的ChunkVideo列表，可以是ChunkVideo实例也可以是普通对象</td>
+        </tr>
+        <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
         </tr>
         <tr>
             <td>startTime</td>
@@ -612,6 +678,10 @@
 
 启动多幕视频渲染合成并等待完成
 
+### MultiVideo.onPageAcquire(fn: Function)
+
+注册页面获取函数，函数返回一个 [Page](./api-reference-low-level.md#page) 实例，使用高级别API时已自动注册，仅在[低级别API](./api-reference-low-level.md)直接使用本类时需要注册。
+
 <br>
 
 # ChunkVideo
@@ -642,6 +712,16 @@
             <td>content</td>
             <td>string</td>
             <td>待渲染的页面内容，与url二选一</td>
+        </tr>
+        <tr>
+            <td>backgroundOpacity</td>
+            <td>number</td>
+            <td>背景不透明度（0-1），仅webm格式支持，用于导出透明通道视频</td>
+        </tr>
+        <tr>
+            <td>waitTimeout</td>
+            <td>number</td>
+            <td>startAndWait超时时间（毫秒），0为不超时，默认0</td>
         </tr>
         <tr>
             <td>outputPath</td>
@@ -800,6 +880,10 @@
 
 错误事件，回调参数：（err）
 
+### pageCrashed
+
+页面崩溃事件，回调参数：（err）
+
 ## 成员
 
 ### ChunkVideo.registerFont(options: Object)
@@ -849,6 +933,14 @@
 ### ChunkVideo.startAndWait(): Promise
 
 启动分块视频渲染合成并等待完成
+
+### ChunkVideo.abort(): boolean
+
+终止渲染合成，捕获将提前终止并以已捕获的帧完成合成输出，返回是否成功触发终止。
+
+### ChunkVideo.onPageAcquire(fn: Function)
+
+注册页面获取函数，函数返回一个 [Page](./api-reference-low-level.md#page) 实例，使用高级别API时已自动注册，仅在[低级别API](./api-reference-low-level.md)直接使用本类时需要注册。
 
 # Audio
 
@@ -901,7 +993,7 @@
         <tr>
             <td>seekEnd</td>
             <td>number</td>
-            <td>裁剪结束实际点（毫秒）</td>
+            <td>裁剪结束时间点（毫秒）</td>
         </tr>
         <tr>
             <td>fadeInDuration</td>
@@ -946,7 +1038,7 @@
         </tr>
         <tr>
             <td>duration</td>
-            <td>string</td>
+            <td>number</td>
             <td>转场时长（毫秒）</td>
         </tr>
     </tbody>

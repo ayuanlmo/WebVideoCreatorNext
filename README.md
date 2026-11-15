@@ -1,25 +1,25 @@
 [简体中文](./README.md) | [English](./README.en-US.md)
 
 <p align="center" style="background:#fff">
-  <img width="650px" src="./assets/web-video-creator.png" />
+  <img width="650px" src="./assets/web-video-creator-next.jpg" />
 </p>
 
-[![NPM](https://nodei.co/npm/web-video-creator.png)](https://npmjs.org/package/web-video-creator)
+[![NPM](https://nodei.co/npm/web-video-creator-next.png)](https://npmjs.org/package/web-video-creator-next)
 
-![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
-![npm](https://img.shields.io/npm/dt/web-video-creator)
-![GitHub Repo stars](https://img.shields.io/github/stars/Vinlic/WebVideoCreator)
+![GitHub](https://img.shields.io/github/license/ayuanlmo/WebVideoCreatorNext)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/ayuanlmo/WebVideoCreatorNext)
+![npm](https://img.shields.io/npm/dt/web-video-creator-next)
+![GitHub Repo stars](https://img.shields.io/github/stars/ayuanlmo/WebVideoCreatorNext)
 
 # 简介
 
-🌈 WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始) 🍻。
+🌈 WebVideoCreatorNext（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始) 🍻。
 
 WVC为您酷炫的动画页面创造了一个虚拟时间环境🕒（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
 
 这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)，这是创新的实验性功能 🧪。
 
-答疑交流QQ群🐧：752693580
+> **关于本项目**：WebVideoCreatorNext 是 [Vinlic/WebVideoCreator](https://github.com/Vinlic/WebVideoCreator)（上游已停止维护）的衍生维护版本，由 ayuanlmo 基于 Apache-2.0 许可重写为 TypeScript（ESM），并现代化依赖、修复稳定性问题。核心 API 保持兼容：主类默认导出（`WebVideoCreator`），并提供 `WebVideoCreatorNext` 别名，文档与示例统一使用 `WebVideoCreatorNext`，NPM 包名为 `web-video-creator-next`，要求 Node.js >= 22.2.0。完整变更见 [CHANGELOG](./CHANGELOG.md)，归属说明见 [NOTICE](./NOTICE)。
 
 <br>
 
@@ -88,11 +88,11 @@ WVC实现对Web页面任意动画的逐帧完美捕获，它可以最大化降�
 ## 安装
 
 ```shell
-# 从NPM安装WebVideoCreator
-npm i web-video-creator
+# 从NPM安装WebVideoCreatorNext
+npm i web-video-creator-next
 ```
 
-如遇到ffmpeg-static下载失败，请先设置环境变量：`FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`
+安装时 postinstall 脚本会自动下载已验证可用的静态 FFmpeg（BtbN 构建）到 `vendor/ffmpeg`（需系统 `curl` 与 `tar`），以替代 `ffmpeg-static` 内置的损坏构建；未覆盖的平台（如 macOS）回退 `ffmpeg-static`。也可使用 `pnpm add web-video-creator-next` 或 `yarn add web-video-creator-next`。
 
 ## 创建本地服务器
 
@@ -128,12 +128,10 @@ live-server
 
 ## 渲染单幕视频
 
-<img style="width:550px" src="./assets/single-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // 配置WVC
 wvc.config({
@@ -147,7 +145,7 @@ const video = wvc.createSingleVideo({
     // 需要渲染的页面地址
     url: "http://localhost:8080/test.html",
     // 或者可以直接设置页面内容
-    // content: "<h1>Hello WebVideoCreator</h1>",
+    // content: "<h1>Hello WebVideoCreatorNext</h1>",
     // 视频宽度
     width: 1280,
     // 视频高度
@@ -163,8 +161,10 @@ const video = wvc.createSingleVideo({
 });
 
 // 监听合成完成事件
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // 所有任务结束后释放资源，详见「释放资源」章节
+    await wvc.destroy();
 });
 
 // 启动合成
@@ -173,12 +173,10 @@ video.start();
 
 ## 渲染多幕视频
 
-<img style="width:550px" src="./assets/multi-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // 配置WVC
 wvc.config({
@@ -200,7 +198,7 @@ const video = wvc.createMultiVideo({
         {
             url: "http://localhost:8080/scene-1.html",
             // 或者可以直接设置页面内容
-            // content: "<h1>Hello WebVideoCreator</h1>",
+            // content: "<h1>Hello WebVideoCreatorNext</h1>",
             duration: 10000,
             // 在第一和第二幕之间插入转场
             transition: TRANSITION.CIRCLE_CROP
@@ -217,8 +215,10 @@ const video = wvc.createMultiVideo({
 });
 
 // 监听合成完成事件
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // 所有任务结束后释放资源，详见「释放资源」章节
+    await wvc.destroy();
 });
 
 // 启动合成
@@ -227,12 +227,10 @@ video.start();
 
 ## 渲染分块视频合并为多幕视频
 
-<img style="width:550px" src="./assets/chunk-video.gif" />
-
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 // 配置WVC
 wvc.config({
@@ -245,7 +243,7 @@ wvc.config({
 const chunk1 = wvc.createChunkVideo({
     url: "http://localhost:8080/scene-1.html",
     // 或者可以直接设置页面内容
-    // content: "<h1>Hello WebVideoCreator</h1>",
+    // content: "<h1>Hello WebVideoCreatorNext</h1>",
     width: 1280,
     height: 720,
     fps: 30,
@@ -288,8 +286,10 @@ const video = wvc.createMultiVideo({
 });
 
 // 监听合成完成事件
-video.once("completed", result => {
+video.once("completed", async result => {
     logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    // 所有任务结束后释放资源，详见「释放资源」章节
+    await wvc.destroy();
 });
 
 // 启动合成
@@ -301,9 +301,9 @@ video.start();
 您可以全局配置WVC调整一些通用参数。
 
 ```javascript
-import WebVideoCreator, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator";
+import WebVideoCreatorNext, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator-next";
 
-const wvc = new WebVideoCreator();
+const wvc = new WebVideoCreatorNext();
 
 wvc.config({
     // 开启后将输出一些WVC的调试日志
@@ -353,6 +353,8 @@ wvc.config({
     frameQuality: 80,
     // 帧图格式（jpeg/png），建议使用jpeg，png捕获较为耗时
     frameFormat: "jpeg",
+    // 预处理数据回传浏览器的分片大小（字节），超过时自动分片传输，默认32MB
+    preprocessChunkSize: 33554432,
     // BeginFrame捕获图像超时时间
     beginFrameTimeout: 5000,
     // MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成，编码器选择可参考 docs/video-encoder.md
@@ -430,6 +432,8 @@ video.addAudios([...]);
 
 这样的操作同样适用于 MultiVideo 和 ChunkVideo 。
 
+> **上游问题修复**：[issues/29](https://github.com/Vinlic/WebVideoCreator/issues/29)「Blob & Base64 \<audio\> not recorded」已修复——`blob:` 与 `data:`（base64）来源的 `<audio>` 现可正常录制合入音轨，也支持 `<source>` 子元素指定的音频来源。
+
 ## 插入视频
 
 目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，如果您的src不包含 `.mp4` 后缀名可能无法被识别，请添加 `capture` 属性标识为需要捕获的元素。
@@ -469,6 +473,8 @@ setTimeout(() => video.remove(), 8000);
 ```html
 <canvas src="test.mp4" video-capture></canvas>
 ```
+
+> **上游问题修复**：[issues/21](https://github.com/Vinlic/WebVideoCreator/issues/21)「嵌入视频太长导致错误」已修复——预处理后的视频数据回传浏览器超过分片大小（默认32MB，可通过 `preprocessChunkSize` 配置）时自动分片传输，不再受浏览器约100MB读缓冲上限限制，长视频可正常嵌入渲染。
 
 ### 透明通道视频
 
@@ -560,7 +566,7 @@ WVC支持使用FFmpeg所支持的 [Xfade](https://trac.ffmpeg.org/wiki/Xfade) �
 每个分块视频参数都能够设置转场效果和持续时长。
 
 ```javascript
-import WebVideoCreator, { TRANSITION } from "web-video-creator";
+import WebVideoCreatorNext, { TRANSITION } from "web-video-creator-next";
 
 ...
 
@@ -804,6 +810,29 @@ const video = wvc.createSingleVideo({
 });
 ```
 
+## 4K 与高画质渲染
+
+> **上游问题验证**：[issues/27](https://github.com/Vinlic/WebVideoCreator/issues/27)「How to record 4k or highest quality possible」已完成像素级回归测试验证：4K 输出尺寸与版面比例正确，`deviceScaleFactor` 不会造成画面拉伸。
+
+`width` / `height` 就是输出视频的像素尺寸，录制 4K 只需直接设置它们：
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 4K输出
+    width: 4096,
+    height: 2160
+});
+```
+
+需要注意的是，确定性渲染模式（默认）下画面以视窗像素（DIP）捕获，`pageViewport.deviceScaleFactor` 不会提升捕获分辨率（也不会拉伸画面）。如果您的页面按较小尺寸（如 1080p）设计，请让页面自适应目标分辨率（响应式布局，或对根元素应用 CSS `zoom` / `transform: scale()` 等比例放大）后再以目标分辨率输出，即可获得比例正确且清晰的 4K 画面。
+
+追求最高画质时建议：
+
+- 帧图使用 `frameFormat: "png"` 无损捕获，或 `frameFormat: "jpeg"` 配合 `frameQuality: 100`；
+- 使用 `videoQuality: 100`，或按需设置更高的 `videoBitrate`；
+- 选择合适的硬编码器以支撑高分辨率高码率编码，参考 [视频编码器说明](./docs/video-encoder.md)。
+
 <br>
 
 # 视频编码器选择
@@ -841,6 +870,18 @@ video.on("progress", (progress, synthesizedFrameCount, totalFrameCount) => {
     captureCtx.throwError(-1, "Abort");
 </script>
 ```
+
+## 终止渲染
+
+如果需要提前结束渲染任务，可以调用视频实例的 `abort()` 方法，捕获将提前终止并以已捕获的帧完成合成输出。
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+// 5秒后终止渲染
+setTimeout(() => video.abort(), 5000);
+```
+
+也可以在页面中调用 [captureCtx.abort()](./docs/capture-ctx.md#capturecontextabort) 终止捕获，效果与视频实例的 `abort()` 一致，低级别API的合成器（[Synthesizer](./docs/api-reference-low-level.md#synthesizer) / [VideoChunk](./docs/api-reference-low-level.md#videochunk) / [ChunkSynthesizer](./docs/api-reference-low-level.md#chunksynthesizer)）同样支持 `abort()`。
 
 ## 监听页面崩溃
 
@@ -914,6 +955,26 @@ wvc.cleanLocalFontCache();
 
 <br>
 
+# 释放资源
+
+所有渲染任务结束、进程退出之前，请调用 `destroy()` 关闭浏览器资源池并释放相关资源，否则浏览器实例将保持存活，Node.js 进程可能无法自然退出。
+
+```javascript
+// 任务全部完成后销毁资源池
+await wvc.destroy();
+```
+
+`destroy()` 的行为：
+
+- 关闭全部浏览器与页面实例，之后 Node.js 进程可自然退出（可参考集成测试 `process-exit` 验证）。
+- 复位配置状态，`destroy()` 之后可重新执行 `config()` 开启新的任务。
+- 未执行过 `config()` 时调用是安全的空操作，不会抛出错误。
+- 可重复调用（幂等）。
+
+低级别API直接使用 [ResourcePool](./docs/api-reference-low-level.md#resourcepool) 时，请调用 `pool.close()` 达到同样的释放效果。
+
+<br>
+
 # API参考
 
 ## 高级别API
@@ -930,7 +991,7 @@ wvc.cleanLocalFontCache();
 
 # 分布式渲染方案
 
-如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/Vinlic/WebVideoCreator/pulls)！**
+如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/ayuanlmo/WebVideoCreatorNext/pulls)！**
 
 <br>
 
@@ -982,6 +1043,6 @@ RAM: 16GB（DDR4 2400MHz）
 
 - 在Mac系统中使用无头实验API在会发生崩溃，需要改为兼容渲染模式才能运行，但兼容渲染模式存在诸多问题，不建议在Mac系统使用，详见[兼容渲染模式](#兼容渲染模式)
 
-- WebVideoCreator是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+- WebVideoCreatorNext是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
 
 - 渲染过程中的页面跳转请求将被拦截，因为跳转页面将导致捕获上下文丢失。
