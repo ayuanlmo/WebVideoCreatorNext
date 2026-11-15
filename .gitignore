@@ -1,15 +1,23 @@
 node_modules
+dist
+coverage
 output
 tmp
 .bin
+vendor
 *.tmp
 *.mp3
 *.mp4
 *.wav
-*.ts
 *.webm
 *.jpg
 *.bmp
-test.js
 .DS_Store
+.idea
+.qoder-credits
 yarn.lock
+package-lock.json
+
+# 测试夹具与品牌图片需要入库
+!test/fixtures/**
+!assets/*.jpg
