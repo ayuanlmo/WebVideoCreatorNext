@@ -66,21 +66,25 @@ describe("集成：lottie 表达式求值封堵（外部动画 JSON 不得经 ev
         expect(await fs.pathExists(outputPath)).toBe(true);
     }, 120000);
 
-    // vendored bundle 的 svg 渲染器不可用（setParams 构造即抛 TypeError），此路径用 canvas 渲染器验证全局默认值；
+    // 直接 loadAnimation 不传 rendererSettings：默认走 svg 渲染器（封堵另一处 renderConfig 默认值）；
     // container/autoplay/loop 必须显式给全，否则动画不渲染帧、表达式不求值，测试会空转
     it("直接 loadAnimation 不传 rendererSettings 时默认不执行表达式", async (): Promise<void> => {
+        let svgBuilt = false;
         const outputPath = await render("lottie-expr-default.mp4",
             `<h1>lottie expression test</h1>`,
             async (page): Promise<void> => {
-                await page.target.evaluate((animationData): void => {
-                    // evaluate 回调运行于浏览器上下文，但测试编译目标无 DOM lib，经 globalThis 别名访问
+                svgBuilt = await page.target.evaluate((animationData): boolean => {
                     const g = globalThis as unknown as {
                         document: { body: unknown };
-                        ____lottie: { loadAnimation(options: Record<string, unknown>): unknown }
+                        ____lottie: { loadAnimation(options: Record<string, unknown>): { renderer?: { svgElement?: unknown } } }
                     };
-                    g.____lottie.loadAnimation({animationData, renderer: "canvas", container: g.document.body, autoplay: true, loop: true});
+                    const anim = g.____lottie.loadAnimation({animationData, container: g.document.body, autoplay: true, loop: true});
+                    // svg 渲染器构造成功即已创建 svgElement（此前 loadAnimation 在此直接抛 TypeError）
+                    return !!(anim && anim.renderer && anim.renderer.svgElement);
                 }, buildMaliciousAnimationData());
             });
+        // svg 渲染器必须真实可用，否则表达式封堵断言可能空转假绿
+        expect(svgBuilt).toBe(true);
         expect(await fs.pathExists(outputPath)).toBe(true);
     }, 120000);
 });
