@@ -217,6 +217,9 @@ export default class ChunkVideo extends VideoChunk {
             const completedPromise = new Promise((resolve): this => this.once("completed", resolve));
             // 监听已渲染的帧输入到合成器
             page.on("frame", (buffer): void | Promise<void> => this.input(buffer));
+            // 必须先挂录制完成监听再启动捕获：捕获可能于首帧同步收尾（如abort提前置位stopFlag），
+            // 晚挂会丢失screencastCompleted事件导致永久等待
+            const screencastCompleted = new Promise<void>((resolve): void => void page.once("screencastCompleted", resolve));
             // 启动捕获
             await page.startScreencast({
                 fps: this.fps,
@@ -225,8 +228,8 @@ export default class ChunkVideo extends VideoChunk {
                 videoDecoderHardwareAcceleration: this.videoDecoderHardwareAcceleration,
                 autostart: this.autostartRender
             });
-            // 监听并等待录制完成
-            await new Promise((resolve): Page => page.once("screencastCompleted", resolve));
+            // 等待录制完成
+            await screencastCompleted;
             // 停止录制
             await page.stopScreencast();
             // 释放页面资源

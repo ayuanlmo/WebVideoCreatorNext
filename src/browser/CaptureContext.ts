@@ -490,8 +490,8 @@ export default class CaptureContext implements ICaptureContext {
         });
     }
 
-    // 触发轮询函数回调
-    protected _callIntervalCallbacks(currentTime?: number): void {
+    // 触发轮询函数回调（currentTime缺省取当前虚拟时间，避免undefined参与比较将待触发回调提前冲刷）
+    protected _callIntervalCallbacks(currentTime: number = this.currentTime): void {
         if (this.intervalCallbacks.length == 0)
             return;
         for (let i = 0; i < this.intervalCallbacks.length; i++) {
@@ -504,8 +504,8 @@ export default class CaptureContext implements ICaptureContext {
         }
     }
 
-    // 触发超时函数回调
-    protected _callTimeoutCallbacks(currentTime?: number): void {
+    // 触发超时函数回调（currentTime缺省取当前虚拟时间，避免undefined参与比较将待触发回调提前冲刷）
+    protected _callTimeoutCallbacks(currentTime: number = this.currentTime): void {
         if (this.timeoutCallbacks.length == 0)
             return;
         this.timeoutCallbacks = this.timeoutCallbacks.filter(([, timestamp, timeout, fn]): boolean => {
