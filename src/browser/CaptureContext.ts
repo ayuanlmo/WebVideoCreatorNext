@@ -187,8 +187,9 @@ export default class CaptureContext implements ICaptureContext {
 
                     // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
                     if (!await ____captureFrame()) {
+                        // 捕获失败已由Page回传error事件，此处终止录制收尾避免挂起
                         this.stopFlag = true;
-                        return;
+                        return ____screencastCompleted();
                     }
 
                     // 遇到暂停标志时等待恢复
@@ -212,7 +213,13 @@ export default class CaptureContext implements ICaptureContext {
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
             })()
-                .catch((err): void => console.error(err));
+                .catch((err): void => {
+                    console.error(err);
+                    // 渲染循环出错后无法自愈：终止捕获并回传错误给Node侧，避免录制无限挂起且错误不可捕获
+                    this.stopFlag = true;
+                    void ____throwError(-1, err instanceof Error ? err.message : String(err));
+                    void ____screencastCompleted();
+                });
         }).bind(this)();
     }
 
