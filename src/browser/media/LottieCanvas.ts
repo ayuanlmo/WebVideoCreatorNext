@@ -100,7 +100,9 @@ export default class LottieCanvas {
                 autoplay: true,
                 // 渲染器设置画布上下文
                 rendererSettings: {
-                    context: this.canvasCtx
+                    context: this.canvasCtx,
+                    // 显式禁用表达式（动画JSON的x字段会被lottie eval执行），与vendor补丁默认值互为双保险
+                    runExpressions: false
                 }
             });
             return true;
