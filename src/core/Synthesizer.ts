@@ -498,8 +498,12 @@ export default class Synthesizer extends EventEmitter {
             const volumeFilter = `,volume=${Math.floor((volume * videoVolume) * 0.01) / 100}`;
             // 音频淡入过滤器
             const fadeInFilter = fadeInDuration ? `,afade=t=in:st=${startTime / 1000}:d=${fadeInDuration / 1000}` : "";
+            // afade位于adelay之后按输出时间轴计时，淡出起点须取音频实际停止点（startTime+可用内容时长），
+            // 直接与文件时长比较会在startTime>0时把淡出提前到错误位置（上游 issues/39）
+            const contentLength = (seekEnd ? Math.min(seekEnd, duration) : duration) - seekStart;
+            const playLength = loop ? endTime - startTime : Math.min(endTime - startTime, contentLength);
             // 音频淡出过滤器
-            const fadeOutFilter = fadeOutDuration ? `,afade=t=out:st=${((loop ? endTime : (Math.min(endTime, duration) || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
+            const fadeOutFilter = fadeOutDuration ? `,afade=t=out:st=${Math.max(0, startTime + playLength - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
             // 输出标志
             const output = `a${index}`;
             outputs += `[${output}]`;
