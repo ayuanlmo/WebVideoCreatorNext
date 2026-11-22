@@ -602,7 +602,7 @@ Lottie动画也很适合作为转场效果，您可以在一段视频的尾部�
 
 ## 导出具有透明通道的视频
 
-WVC支持您设置背景的不透明度 `backgroundOpacity` 选项实现透明或半透明背景视频的输出，它的值范围是**0-1**，请确保输出视频文件后缀名或format选项为 **webm**。
+WVC支持您设置背景的不透明度 `backgroundOpacity` 选项实现透明或半透明背景视频的输出，它的值范围是**0-1**，请确保输出视频文件后缀名或format选项为 **webm**。此时无需额外配置：像素格式会自动使用带 alpha 的 `yuva420p`，编码器会自动选用支持 alpha 的 libvpx 系；如需显式指定 `pixelFormat`，请使用带 alpha 的格式（如 `yuva420p`）。
 
 ```javascript
 const video = wvc.createSingleVideo({
@@ -727,7 +727,9 @@ const video = wvc.createSingleVideo({
     // 图像截取时间点（毫秒），默认是视频时长的20%位置）
     coverCaptureTime: 1000,
     // 图像保存格式（jpg/png/bmp），默认jpg
-    coverCaptureFormat: "jpg"
+    coverCaptureFormat: "jpg",
+    // 图像质量（0-100），值越高质量越好，仅jpg格式生效
+    coverCaptureQuality: 100
 });
 ```
 
@@ -800,7 +802,9 @@ const video = wvc.createSingleVideo({
 
 ## 修改像素格式
 
-WVC目前支持输出 `yuv420p` / `yuv444p` / `rgb24` 像素格式的视频，默认采用兼容性更好的 yuv420p ，如果您发现输出的视频与页面的颜色有较大的差异，可以切换为 rgb24 改善这个问题。
+WVC目前支持输出 `yuv420p` / `yuva420p` / `yuv444p` / `rgb24` 像素格式的视频，默认采用兼容性更好的 yuv420p ，如果您发现输出的视频与页面的颜色有较大的差异，可以切换为 rgb24 改善这个问题。
+
+> **透明通道注意**：导出带透明通道的视频（`backgroundOpacity < 1`）时必须使用带 alpha 的像素格式（未指定时默认 `yuva420p`），`rgb24` 等无 alpha 的像素格式会静默丢弃透明通道，此时显式指定将直接报错，详见 [导出具有透明通道的视频](#导出具有透明通道的视频)。
 
 ```javascript
 const video = wvc.createSingleVideo({

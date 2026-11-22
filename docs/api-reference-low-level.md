@@ -495,6 +495,11 @@ localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
             <td>封面捕获格式（jpg/png/bmp），默认jpg</td>
         </tr>
         <tr>
+            <td>coverCaptureQuality</td>
+            <td>number</td>
+            <td>封面捕获JPG质量（0-100，值越高质量越好，仅jpg格式生效）</td>
+        </tr>
+        <tr>
             <td>videoEncoder</td>
             <td>string</td>
             <td>视频编码器，编码器选择请参考 <a href="./video-encoder.md">视频编码器列表</a></td>
@@ -512,7 +517,7 @@ localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
         <tr>
             <td>pixelFormat</td>
             <td>string</td>
-            <td>像素格式（yuv420p/yuv444p/rgb24），默认yuv420p</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24/yuva420p），默认yuv420p（backgroundOpacity&lt;1 时为 yuva420p），透明视频须使用带 alpha 的格式，显式指定 rgb24 等无 alpha 格式会报错</td>
         </tr>
         <tr>
             <td>audioEncoder</td>
@@ -698,7 +703,7 @@ localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
         <tr>
             <td>pixelFormat</td>
             <td>string</td>
-            <td>像素格式（yuv420p/yuv444p/rgb24），默认yuv420p</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24/yuva420p），默认yuv420p（backgroundOpacity&lt;1 时为 yuva420p），透明视频须使用带 alpha 的格式，显式指定 rgb24 等无 alpha 格式会报错</td>
         </tr>
         <tr>
             <td>parallelWriteFrames</td>
@@ -841,6 +846,11 @@ localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
             <td>封面捕获格式（jpg/png/bmp），默认jpg</td>
         </tr>
         <tr>
+            <td>coverCaptureQuality</td>
+            <td>number</td>
+            <td>封面捕获JPG质量（0-100，值越高质量越好，仅jpg格式生效）</td>
+        </tr>
+        <tr>
             <td>videoEncoder</td>
             <td>string</td>
             <td>视频编码器，编码器选择请参考 <a href="./video-encoder.md">视频编码器列表</a></td>
@@ -858,7 +868,7 @@ localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
         <tr>
             <td>pixelFormat</td>
             <td>string</td>
-            <td>像素格式（yuv420p/yuv444p/rgb24），默认yuv420p</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24/yuva420p），默认yuv420p（backgroundOpacity&lt;1 时为 yuva420p），透明视频须使用带 alpha 的格式，显式指定 rgb24 等无 alpha 格式会报错</td>
         </tr>
         <tr>
             <td>audioEncoder</td>
