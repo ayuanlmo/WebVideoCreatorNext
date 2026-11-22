@@ -84,3 +84,27 @@ export function forwardFactoryCreateError<T>(pool: TPool<T>, onError: (error: Er
         waiter.reject(error);
     });
 }
+
+// 等待池内可用资源达到min
+// generic-pool的ready()只轮询不reject，且工厂创建失败后既不补建缺额也不报错，
+// 浏览器/页面启动失败时会永久挂起（上游 issues/38）；这里主动补建缺额，创建错误超出预算即抛出供调用方捕获重试
+export async function poolReady<T>(pool: TPool<T>, min: number, maxErrors = 3): Promise<void> {
+    let errorCount = 0;
+    let lastError: Error = null;
+    const onCreateError = (error: Error): void => {
+        errorCount++;
+        lastError = error;
+    };
+    pool.on("factoryCreateError", onCreateError);
+    try {
+        while (pool.available < min) {
+            if (errorCount >= maxErrors)
+                throw lastError ?? new Error(`Pool warmup failed: available ${pool.available} < min ${min}`);
+            // generic-pool仅在存在acquire等待者时经_dispense补建，创建失败留下的缺额需手动触发补建
+            (pool as unknown as { _ensureMinimum(): void })._ensureMinimum();
+            await new Promise((resolve): NodeJS.Timeout => setTimeout(resolve, 200));
+        }
+    } finally {
+        pool.off("factoryCreateError", onCreateError);
+    }
+}

@@ -11,7 +11,7 @@ import type VideoPreprocessor from "../preprocessor/video/VideoPreprocessor";
 import globalConfig from "../lib/global-config";
 import installBrowser from "../lib/install-browser";
 import logger from "../lib/logger";
-import {createPool, forwardFactoryCreateError, type TPool} from "../lib/pool-util";
+import {createPool, forwardFactoryCreateError, poolReady, type TPool} from "../lib/pool-util";
 
 // 浏览器选项
 export interface IBrowserOptions {
@@ -155,7 +155,7 @@ export default class Browser {
     // 预热页面池
     private async warmupPagePool(): Promise<void> {
         this.pagePool.start();
-        await this.pagePool.ready();
+        await poolReady(this.pagePool, this.numPageMin);
     }
 
     // 获取可用页面资源

@@ -7,7 +7,7 @@ import Page from "./Page";
 import VideoPreprocessor from "../preprocessor/video/VideoPreprocessor";
 import globalConfig from "../lib/global-config";
 import logger from "../lib/logger";
-import {createPool, forwardFactoryCreateError, type TPool} from "../lib/pool-util";
+import {createPool, forwardFactoryCreateError, poolReady, type TPool} from "../lib/pool-util";
 
 // 视频预处理器选项
 export interface IVideoPreprocessorOptions {
@@ -84,7 +84,7 @@ export default class ResourcePool {
         await asyncLock.acquire("warmup", async (): Promise<void> => {
             this.closed = false;
             this.browserPool.start();
-            await this.browserPool.ready();
+            await poolReady(this.browserPool, this.numBrowserMin);
             this.warmupped = true;
         });
     }
