@@ -2,6 +2,24 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2] - 2026-11-23
+
+### 安全
+
+- **lottie 表达式执行封堵**（对应上游安全 PR）：lottie-web expressions 会把动画 JSON 的 `x` 字段送入 `eval()` 执行，而页面注入了 Node 桥接（`____addAudio` 等），外部来源的动画 JSON 可借此在 Node 侧能力范围内执行任意代码。现 vendored lottie 构建默认关闭 `runExpressions`（覆盖 `<lottie>` 元素扫描与直接 `loadAnimation` 全部入口），`LottieCanvas` 调用点再显式禁用形成双层防护；确需表达式的用户可在 `rendererSettings.runExpressions` 显式开启（请仅用于可信动画）。集成测试 `lottie-expression-security.test.ts`。
+
+### 修复
+
+- **音频淡出位置错误**（上游 [issues/39](https://github.com/Vinlic/WebVideoCreator/issues/39) 已修复）：`afade` 位于 `adelay` 之后按输出时间轴计时，淡出起点此前与音频文件时长比较，`startTime > 0` 时淡出被提前到错误位置（25s 音频播放 20–45s 会在 24s 处淡出）。现按音频实际停止点（`startTime + 可用内容时长`，含 seekStart/seekEnd 裁剪与循环）计算。集成测试 `issue-39-audio-fade.test.ts`。
+- **渲染循环异常导致录制永久挂起**（上游 [issues/18](https://github.com/Vinlic/WebVideoCreator/issues/18) 已修复）：捕获渲染循环抛出的异常此前被静默吞掉，录制永不收尾、错误无法触发。现异常会终止捕获并回传 Node 侧，`startAndWait()` 正常 reject 携带原始错误。集成测试 `issue-18-error-propagation.test.ts`。
+- **页面侧 `captureCtx.abort()` 挂起**：两个叠加缺陷——捕获初始化时页面脚本预排的虚拟定时器被整体提前冲刷（`setTimeout` 在时间 0 即触发，视频时间语义失效）；捕获于首帧同步收尾时 `screencastCompleted` 事件早于 Node 侧监听挂载而丢失。现页面 `setTimeout(() => window.captureCtx.abort(), 3000)` 等用法按视频时间正常终止并收尾。集成测试 `page-abort.test.ts`。
+- **lottie svg 渲染器不可用**：vendored lottie 构建仅注册 canvas 渲染器，svg 路径（lottie 默认）构造渲染器时抛 `TypeError`。已补注册 svg 渲染器。
+
+### 构建 / CI
+
+- 发布工作流修复（对包使用无影响）：构建 Node 升级 24 LTS 以兼容 npm@latest 引擎要求、pnpm 版本统一取 `packageManager`、补齐浏览器依赖安装、Ubuntu 24.04 起改用 t64 包名、修复 secrets 引用损坏导致的 YAML 语法错误。
+- 修复 `src/assets/vendor` 被 `.gitignore` 误忽略导致发布构建缺失 mp4box/lottie/fontfaceobserver 的问题。
+
 ## [0.1.1] - 2026-11-15
 
 ### 修复
