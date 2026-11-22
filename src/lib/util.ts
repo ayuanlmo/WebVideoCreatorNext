@@ -214,16 +214,18 @@ export default {
     },
 
     // 从视频捕获截图
-    async captureScreenshot(source: string, dest: string, timemark: number): Promise<void> {
+    async captureScreenshot(source: string, dest: string, timemark: number, quality?: number): Promise<void> {
         return new Promise((resolve, reject): void => {
-            ffmpeg(source)
-                .screenshot({
-                    folder: path.dirname(dest),
-                    filename: path.basename(dest),
-                    timemarks: [this.millisecondsToHmss(timemark)]
-                })
+            const cmd = ffmpeg(source)
+                .addInputOption("-ss", this.millisecondsToHmss(timemark))
+                .outputOptions(["-frames:v", "1"]);
+            // JPG质量映射到MJPEG量化器qscale（2-31，值越小质量越高），其余格式不支持质量参数
+            if (_.isFinite(quality) && path.extname(dest) == ".jpg")
+                cmd.outputOption("-q:v", String(Math.max(2, Math.min(31, Math.round(31 - (quality / 100) * 29)))));
+            cmd.output(dest)
                 .once("error", reject)
-                .once("end", resolve);
+                .once("end", resolve)
+                .run();
         });
     },
 

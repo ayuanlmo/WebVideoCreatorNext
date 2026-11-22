@@ -31,6 +31,12 @@ export type TFfmpegCommand = ReturnType<typeof ffmpeg>;
 // cli 进度条（MultiBar.create 会替换为 GenericBar 实例）
 type TCliProgress = (cliProgress.SingleBar | cliProgress.MultiBar | cliProgress.GenericBar) & { started?: boolean };
 
+// 支持alpha通道的视频编码器（webm的alpha经容器BlockAdditional承载，仅libvpx系编码器支持，其余编码器会静默丢弃透明通道）
+const ALPHA_VIDEO_ENCODERS: string[] = ["libvpx", "libvpx-vp9"];
+
+// 带alpha的像素格式命名（yuva*/rgba*/ya8等），用于校验显式指定的pixelFormat
+const ALPHA_PIXEL_FORMATS = /^(yuva|rgba|argb|abgr|bgra|gbrap|ya(8|16))/;
+
 // 合成完成结果
 export interface IRenderResult {
     duration: number; // 输出视频时长（毫秒）
@@ -51,6 +57,7 @@ export interface ISynthesizerOptions {
     coverCapture?: boolean; // 是否捕获封面并输出
     coverCaptureTime?: number; // 封面捕获时间点（毫秒）
     coverCaptureFormat?: string; // 封面捕获格式（jpg/png/bmp）
+    coverCaptureQuality?: number; // 封面捕获JPG质量（0-100，仅jpg格式生效）
     videoEncoder?: string; // 视频编码器
     videoQuality?: number; // 视频质量（0-100）
     videoBitrate?: string; // 视频码率（设置码率将忽略videoQuality）
@@ -91,6 +98,7 @@ export default class Synthesizer extends EventEmitter {
     public coverCapture: boolean; // 是否捕获封面并输出
     public coverCaptureTime: number; // 封面捕获时间点（毫秒）
     public coverCaptureFormat: string; // 封面捕获格式（jpg/png/bmp）
+    public coverCaptureQuality: number; // 封面捕获JPG质量（0-100，仅jpg格式生效）
     public videoEncoder: string; // 视频编码器
     public videoQuality: number; // 视频质量（0-100）
     public videoBitrate: string; // 视频码率（如8M，设置码率将忽略videoQuality）
@@ -123,7 +131,7 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isObject(options), "Synthesizer options must be object");
         const {
             width, height, fps, duration, format, outputPath,
-            attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
+            attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat, coverCaptureQuality,
             videoEncoder, videoQuality, videoBitrate, pixelFormat, audioEncoder,
             audioBitrate, volume, parallelWriteFrames, backgroundOpacity, showProgress
         } = options;
@@ -137,6 +145,7 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(coverCapture) || _.isBoolean(coverCapture), "coverCapture must be boolean");
         assert(_.isUndefined(coverCaptureTime) || _.isFinite(coverCaptureTime), "coverCaptureTime must be number");
         assert(_.isUndefined(coverCaptureFormat) || _.isString(coverCaptureFormat), "coverCaptureFormat must be string");
+        assert(_.isUndefined(coverCaptureQuality) || (_.isFinite(coverCaptureQuality) && coverCaptureQuality >= 0 && coverCaptureQuality <= 100), "coverCaptureQuality must be number between 0 and 100");
         assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
         assert(_.isUndefined(videoQuality) || _.isFinite(videoQuality), "videoQuality must be number");
         assert(_.isUndefined(videoBitrate) || _.isString(videoBitrate), "videoBitrate must be string");
@@ -168,14 +177,27 @@ export default class Synthesizer extends EventEmitter {
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
+        this.coverCaptureQuality = coverCaptureQuality;
+        this.backgroundOpacity = _.defaultTo(backgroundOpacity, 1);
         this.videoEncoder = _.defaultTo(videoEncoder, _.defaultTo(this.format == "webm" ? globalConfig.webmEncoder : globalConfig.mp4Encoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264"));
+        // 透明通道需要编码器与像素格式共同承载alpha，否则被静默丢弃（上游 issues/34）：
+        // 显式指定不支持alpha的编码器/像素格式时快速失败；仅全局默认不支持时回退libvpx-vp9并告警
+        if (this.hasAlphaChannel) {
+            if (!ALPHA_VIDEO_ENCODERS.includes(this.videoEncoder)) {
+                if (_.isString(videoEncoder))
+                    throw new Error(`videoEncoder ${this.videoEncoder} cannot carry the alpha channel required by backgroundOpacity < 1, use libvpx-vp9`);
+                logger.warn(`videoEncoder ${this.videoEncoder} cannot carry the alpha channel, fallback to libvpx-vp9`);
+                this.videoEncoder = "libvpx-vp9";
+            }
+            if (_.isString(pixelFormat) && !ALPHA_PIXEL_FORMATS.test(pixelFormat))
+                throw new Error(`pixelFormat ${pixelFormat} cannot carry the alpha channel required by backgroundOpacity < 1, use yuva420p`);
+        }
         this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;
         this.audioEncoder = _.defaultTo(audioEncoder, _.defaultTo(globalConfig.audioEncoder, FORMAT_AUDIO_ENCODER_MAP[this.format][0] || "aac"));
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
-        this.backgroundOpacity = _.defaultTo(backgroundOpacity, 1);
         this.pixelFormat = _.defaultTo(pixelFormat, this.hasAlphaChannel ? "yuva420p" : "yuv420p");
         this.showProgress = _.defaultTo(showProgress, false);
         this.frameBuffers = new Array(this.parallelWriteFrames);
@@ -517,7 +539,7 @@ export default class Synthesizer extends EventEmitter {
 
     // 捕获封面
     private async captureCover(): Promise<void> {
-        const {outputPath, coverCaptureTime, coverCaptureFormat} = this;
+        const {outputPath, coverCaptureTime, coverCaptureFormat, coverCaptureQuality} = this;
         assert(["jpg", "png", "bmp"].includes(coverCaptureFormat), "coverCaptureFormat must be jpg or png or bmp");
         let captureTime: number;
         if (_.isFinite(coverCaptureTime))
@@ -525,7 +547,7 @@ export default class Synthesizer extends EventEmitter {
         else
             captureTime = this.getOutputDuration() * 0.2;
         const coverPath = path.join(path.dirname(outputPath), `${path.basename(outputPath)}.${coverCaptureFormat}`);
-        await util.captureScreenshot(outputPath, coverPath, captureTime);
+        await util.captureScreenshot(outputPath, coverPath, captureTime, coverCaptureQuality);
     }
 
     // 关闭编码器
