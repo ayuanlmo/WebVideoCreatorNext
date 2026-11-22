@@ -15,7 +15,7 @@
 
 🌈 WebVideoCreatorNext (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start) 🍻.
 
-WVC creates a virtual time environment🕒 for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
+WVC creates a virtual time environment🕒 for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/en/renderer-env.md#the-uncertain-rendering-environment) into a [deterministic rendering environment](./docs/en/renderer-env.md#the-deterministic-rendering-environment).
 
 All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame), This is an innovative experimental function 🧪.
 
@@ -387,7 +387,7 @@ setTimeout(() => document.body.appendChild(audio), 3000);
 setTimeout(() => audio.remove(), 8000);
 ```
 
-Or call [captureCtx.addAudio](./docs/capture-ctx.md#capturecontextaddaudiooptions-object) on the page to add audio to the video.
+Or call [captureCtx.addAudio](./docs/en/capture-ctx.md#capturecontextaddaudiooptions-object) on the page to add audio to the video.
 
 ```javascript
 // Add a single audio track
@@ -402,7 +402,7 @@ captureCtx.addAudio({
 captureCtx.addAudios([...]);
 ```
 
-You can also directly use [addAudio](./docs/api-reference-high-level.md#singlevideoaddaudiooptions-object) in WVC to add local or remote audio to the video.
+You can also directly use [addAudio](./docs/en/api-reference-high-level.md#singlevideoaddaudiooptions-object) in WVC to add local or remote audio to the video.
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
@@ -550,7 +550,7 @@ Make sure the fonts can be loaded; otherwise, rendering may not start.
 
 ## Inserting Transition Effects
 
-WVC supports the use of [Xfade](https://trac.ffmpeg.org/wiki/Xfade) filters supported by FFmpeg to create transition effects. You can refer to the [list of transitions](./docs/transition.md).
+WVC supports the use of [Xfade](https://trac.ffmpeg.org/wiki/Xfade) filters supported by FFmpeg to create transition effects. You can refer to the [list of transitions](./docs/en/transition.md).
 
 Each chunk video parameter can be configured with a transition effect and its duration.
 
@@ -591,7 +591,7 @@ Lottie animations are also suitable for use as transition effects. You can play 
 
 ## Export videos with transparent channels
 
-WVC supports you to set the background opacity `backgroundOpacity` option to achieve transparent or semi transparent background video output, with a value range of **0-1**, Please ensure that the output video path suffix name or format option is **webm**.
+WVC supports you to set the background opacity `backgroundOpacity` option to achieve transparent or semi transparent background video output, with a value range of **0-1**, Please ensure that the output video path suffix name or format option is **webm**. No extra configuration is needed: the pixel format automatically uses `yuva420p` (with alpha) and an alpha-capable libvpx encoder is selected; if you specify `pixelFormat` explicitly, use one with alpha (such as `yuva420p`).
 
 ```javascript
 const video = wvc.createSingleVideo({
@@ -605,7 +605,7 @@ const video = wvc.createSingleVideo({
 
 By default, WVC starts rendering immediately after the page navigation is complete. If you
 
- want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call [captureCtx.start()](./docs/capture-ctx.md#capturecontextstart) in your page code, or rendering will be blocked indefinitely.
+ want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call [captureCtx.start()](./docs/en/capture-ctx.md#capturecontextstart) in your page code, or rendering will be blocked indefinitely.
 
 ```javascript
 const video = wvc.createSingleVideo({
@@ -722,7 +722,9 @@ const video = wvc.createSingleVideo({
     // Time in milliseconds to capture the image (default is 20% of the video's duration)
     coverCaptureTime: 1000,
     // Image format for capture (jpg/png/bmp), default is jpg
-    coverCaptureFormat: "jpg"
+    coverCaptureFormat: "jpg",
+    // Image quality (0-100), higher is better, effective for jpg only
+    coverCaptureQuality: 100
 });
 ```
 
@@ -795,7 +797,9 @@ const video = wvc.createSingleVideo({
 
 ## Change Pixel Format
 
-WVC currently supports output in `yuv420p`, `yuv444p`, and `rgb24` pixel formats. It defaults to using the more compatible `yuv420p`. If you notice significant color differences between the output video and the original page, you can switch to `rgb24` to improve the issue.
+WVC currently supports output in `yuv420p`, `yuva420p`, `yuv444p`, and `rgb24` pixel formats. It defaults to using the more compatible `yuv420p`. If you notice significant color differences between the output video and the original page, you can switch to `rgb24` to improve the issue.
+
+> **Alpha channel note**: When exporting videos with an alpha channel (`backgroundOpacity < 1`), you must use a pixel format with alpha (`yuva420p` by default). Alpha-less formats such as `rgb24` silently discard the transparency; specifying them explicitly will throw an error, see [Export videos with transparent channels](#export-videos-with-transparent-channels).
 
 ```javascript
 const video = wvc.createSingleVideo({
@@ -826,7 +830,7 @@ For the highest quality, it is recommended to:
 
 - Capture frames losslessly with `frameFormat: "png"`, or use `frameFormat: "jpeg"` with `frameQuality: 100`;
 - Use `videoQuality: 100`, or set a higher `videoBitrate` as needed;
-- Choose a suitable hardware encoder to sustain high-resolution, high-bitrate encoding, see [Video Encoder Documentation](./docs/video-encoder.md).
+- Choose a suitable hardware encoder to sustain high-resolution, high-bitrate encoding, see [Video Encoder Documentation](./docs/en/video-encoder.md).
 
 <br>
 
@@ -834,7 +838,7 @@ For the highest quality, it is recommended to:
 
 When rendering frames from the browser and feeding them into FFmpeg, it's necessary to encode the image data at the specified frame rate and store it in a specified format container using a video encoder. Video encoding is a resource-intensive operation, and choosing a hardware encoder can accelerate this process and reduce CPU load.
 
-Please refer to the [Video Encoder Guide](./docs/video-encoder.md) for a list of supported video encoders by WVC.
+Please refer to the [Video Encoder Guide](./docs/en/video-encoder.md) for a list of supported video encoders by WVC.
 
 <br>
 
@@ -876,7 +880,7 @@ const video = wvc.createSingleVideo({ ... });
 setTimeout(() => video.abort(), 5000);
 ```
 
-You can also call [captureCtx.abort()](./docs/capture-ctx.md#capturecontextabort) in the page to terminate capturing, which has the same effect as the `abort()` of the video instance. The synthesizers of the low-level API ([Synthesizer](./docs/api-reference-low-level.md#synthesizer) / [VideoChunk](./docs/api-reference-low-level.md#videochunk) / [ChunkSynthesizer](./docs/api-reference-low-level.md#chunksynthesizer)) also support `abort()`.
+You can also call [captureCtx.abort()](./docs/en/capture-ctx.md#capturecontextabort) in the page to terminate capturing, which has the same effect as the `abort()` of the video instance. The synthesizers of the low-level API ([Synthesizer](./docs/en/api-reference-low-level.md#synthesizer) / [VideoChunk](./docs/en/api-reference-low-level.md#videochunk) / [ChunkSynthesizer](./docs/en/api-reference-low-level.md#chunksynthesizer)) also support `abort()`.
 
 ## Listening for Page Crashes
 
@@ -966,7 +970,7 @@ Behavior of `destroy()`:
 - Calling it before `config()` is a safe no-op and does not throw.
 - It is idempotent and safe to call multiple times.
 
-When using [ResourcePool](./docs/api-reference-low-level.md#resourcepool) directly with the low-level API, call `pool.close()` for the same effect.
+When using [ResourcePool](./docs/en/api-reference-low-level.md#resourcepool) directly with the low-level API, call `pool.close()` for the same effect.
 
 <br>
 
@@ -976,11 +980,11 @@ When using [ResourcePool](./docs/api-reference-low-level.md#resourcepool) direct
 
 In most cases, it is recommended to use the high-level API because it is simple but may be less flexible.
 
-[API Reference High Level](./docs/api-reference-high-level.md)
+[API Reference High Level](./docs/en/api-reference-high-level.md)
 
 ## Low-Level API
 
-[API Reference Low Level](./docs/api-reference-low-level.md)
+[API Reference Low Level](./docs/en/api-reference-low-level.md)
 
 <br>
 
