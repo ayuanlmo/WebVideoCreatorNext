@@ -2,6 +2,22 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2026-11-23
+
+### 新增
+
+- **封面捕获质量参数**（上游 [issues/37](https://github.com/Vinlic/WebVideoCreator/issues/37) 已实现）：新增 `coverCaptureQuality` 选项（0-100，仅 jpg 格式生效），映射到 FFmpeg MJPEG 量化器控制封面图质量。集成测试 `issue-37-cover-quality.test.ts`。
+
+### 修复
+
+- **浏览器启动失败导致永久挂起**（上游 [issues/38](https://github.com/Vinlic/WebVideoCreator/issues/38) 已修复）：generic-pool 的 `ready()` 只轮询永不 reject 且创建失败后不补建缺额，浏览器启动失败时 `warmup()`/`acquirePage()`/`createSingleVideo()` 永久挂起且 try/catch 无法捕获。现池就绪等待带错误预算与主动补建，失败时快速 reject、可捕获重试。集成测试 `issue-38-browser-launch-failure.test.ts`。
+- **透明视频 alpha 通道静默丢失**（上游 [issues/34](https://github.com/Vinlic/WebVideoCreator/issues/34) 已修复）：`backgroundOpacity < 1` 时显式指定无 alpha 的 `pixelFormat`（如 rgb24）或编码器会静默丢弃透明通道，现显式冲突快速失败并给出替代建议；默认管线（libvpx + yuva420p）的透明效果已逐像素验证完好。集成测试 `issue-34-alpha-pixel-format.test.ts`。
+
+### 文档
+
+- **英文文档集**（上游 [issues/31](https://github.com/Vinlic/WebVideoCreator/issues/31) 已实现）：新增 `docs/en/` 六篇全量英文文档（高/低级别 API 参考、captureCtx、渲染环境、转场、视频编码器），README.en-US 链接改指英文版并同步新增内容。
+- 补充 `coverCaptureQuality` 与透明通道像素格式（yuva420p）说明（README 与高/低级别 API 参考）。
+
 ## [0.1.2] - 2026-11-23
 
 ### 安全
